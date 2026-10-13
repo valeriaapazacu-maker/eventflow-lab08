@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EventFlow: recintos y equipos en vivo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="cielo" aria-hidden="true">
+        <span class="luz luz-a"></span><span class="luz luz-b"></span><span class="luz luz-c"></span>
+    </div>
+
+    <header class="barra">
+        <div>
+            <h1>EventFlow</h1>
+            <p class="lema">Recintos y equipos técnicos de tus eventos, en vivo.</p>
+        </div>
+        <div id="estadoApi" class="chip chip-espera" role="status">Conectando con la API…</div>
+    </header>
+
+    <main class="rejilla">
+        <div class="principal">
+            <section class="vidrio" aria-labelledby="tEspacios">
+                <div class="cabecera-seccion">
+                    <h2 id="tEspacios">Espacios</h2>
+                    <span id="contEspacios" class="contador"></span>
+                </div>
+                <div id="listaEspacios" class="espacios"></div>
+            </section>
+
+            <section class="vidrio" aria-labelledby="tRecursos">
+                <div class="cabecera-seccion">
+                    <h2 id="tRecursos">Recursos técnicos</h2>
+                    <span id="contRecursos" class="contador"></span>
+                </div>
+                <form id="filtros" class="filtros" novalidate>
+                    <label>
+                        Espacio
+                        <select id="filtroEspacio"><option value="">Todos</option></select>
+                    </label>
+                    <label>
+                        Costo mínimo
+                        <input id="filtroMin" type="text" inputmode="decimal" placeholder="0.00">
+                    </label>
+                    <label>
+                        Costo máximo
+                        <input id="filtroMax" type="text" inputmode="decimal" placeholder="1000.00">
+                    </label>
+                    <button type="button" id="limpiarFiltros" class="boton-suave">Limpiar</button>
+                </form>
+                <div class="tabla-scroll">
+                    <table>
+                        <thead>
+                            <tr><th>Equipo</th><th>Código</th><th>Espacio</th><th class="num">Costo</th><th class="num">Stock</th><th><span class="solo-lectores">Acciones</span></th></tr>
+                        </thead>
+                        <tbody id="cuerpoRecursos"></tbody>
+                    </table>
+                </div>
+                <p id="vacioRecursos" class="vacio" hidden>No hay recursos con esos filtros. Registra uno desde el panel de la derecha.</p>
+            </section>
+        </div>
+
+        <aside class="lateral">
+            <section class="vidrio" aria-labelledby="tSesion">
+                <h2 id="tSesion">Sesión</h2>
+                <p class="ayuda">Mirar es libre. Para registrar o eliminar necesitas iniciar sesión.</p>
+                <form id="formSesion" novalidate>
+                    <label>
+                        Usuario
+                        <input name="usuario" autocomplete="username" required>
+                    </label>
+                    <label>
+                        Contraseña
+                        <input name="clave" type="password" autocomplete="current-password" required>
+                    </label>
+                    <div class="fila-botones">
+                        <button type="submit" class="boton">Iniciar sesión</button>
+                        <button type="button" id="cerrarSesion" class="boton-suave" hidden>Cerrar sesión</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="vidrio" aria-labelledby="tRegistro">
+                <h2 id="tRegistro">Registrar</h2>
+                <div class="pestanas" role="tablist">
+                    <button type="button" role="tab" id="tabRecurso" aria-selected="true" aria-controls="formRecurso">Recurso</button>
+                    <button type="button" role="tab" id="tabEspacio" aria-selected="false" aria-controls="formEspacio">Espacio</button>
+                </div>
+
+                <!-- novalidate: el navegador no frena los datos, así se ve la respuesta 400 del backend -->
+                <form id="formRecurso" role="tabpanel" aria-labelledby="tabRecurso" novalidate>
+                    <label>
+                        Nombre del equipo
+                        <input name="nombre" placeholder="Consola de sonido">
+                        <p class="error-campo" data-error="nombre"></p>
+                    </label>
+                    <label>
+                        Código de inventario
+                        <input name="codigo_inventario" placeholder="SND-001">
+                        <p class="error-campo" data-error="codigo_inventario"></p>
+                    </label>
+                    <div class="par">
+                        <label>
+                            Costo (S/)
+                            <input name="costo" type="text" inputmode="decimal" placeholder="450.00">
+                            <p class="error-campo" data-error="costo"></p>
+                        </label>
+                        <label>
+                            Stock
+                            <input name="stock" type="text" inputmode="numeric" placeholder="2">
+                            <p class="error-campo" data-error="stock"></p>
+                        </label>
+                    </div>
+                    <label>
+                        Espacio asignado
+                        <select name="espacio" id="selectEspacio"></select>
+                        <p class="error-campo" data-error="espacio"></p>
+                    </label>
+                    <button type="submit" class="boton">Guardar recurso</button>
+                </form>
+
+                <form id="formEspacio" role="tabpanel" aria-labelledby="tabEspacio" novalidate hidden>
+                    <label>
+                        Nombre del espacio
+                        <input name="nombre" placeholder="Auditorio Central">
+                        <p class="error-campo" data-error="nombre"></p>
+                    </label>
+                    <label>
+                        Ubicación o bloque
+                        <input name="ubicacion" placeholder="Bloque A, piso 2">
+                        <p class="error-campo" data-error="ubicacion"></p>
+                    </label>
+                    <div class="par">
+                        <label>
+                            Aforo máximo
+                            <input name="aforo_maximo" type="text" inputmode="numeric" placeholder="300">
+                            <p class="error-campo" data-error="aforo_maximo"></p>
+                        </label>
+                        <label>
+                            Estado
+                            <select name="estado">
+                                <option value="operativo">Operativo</option>
+                                <option value="mantenimiento">En mantenimiento</option>
+                                <option value="fuera_servicio">Fuera de servicio</option>
+                            </select>
+                            <p class="error-campo" data-error="estado"></p>
+                        </label>
+                    </div>
+                    <button type="submit" class="boton">Guardar espacio</button>
+                </form>
+            </section>
+        </aside>
+    </main>
+
+    <div id="avisos" class="avisos" aria-live="polite"></div>
+    <script src="app.js"></script>
+</body>
+</html>
